@@ -1,12 +1,7 @@
 const SteemBot = require('steem-bot').default
-const steem = require('steem')
-const LanguageDetect = require('languagedetect')
-const lngDetector = new LanguageDetect()
 
 const validateDeposit = require('./validation/classes/deposit')
 const validatePost = require('./validation/classes/post')
-
-steem.api.setOptions({ url: 'https://api.steemit.com' })
 
 const username = 'bla'
 const postingKey = 'bla'

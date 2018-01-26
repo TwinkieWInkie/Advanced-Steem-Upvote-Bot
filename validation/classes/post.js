@@ -1,6 +1,8 @@
 const main = require('../index')
+const LanguageDetect = require('languagedetect')
+const lngDetector = new LanguageDetect()
 
-module.exports - class extends main {
+module.exports = class extends main {
     constructor (deposit, settings) {
         super(deposit, settings)
 
