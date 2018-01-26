@@ -4,7 +4,7 @@ module.exports = class {
     }
 
     doRefund () {
-        if (data.amount.indexOf('STEEM') > -1) {
+        if (this.deposit.data.amount.indexOf('STEEM') > -1) {
             this.deposit.res.sendSteem(
                 this.deposit.data.amount,
                 'Refunding'

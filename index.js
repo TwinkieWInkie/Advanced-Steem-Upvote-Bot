@@ -3,6 +3,9 @@ const SteemBot = require('steem-bot').default
 const validateDeposit = require('./validation/classes/deposit')
 const validatePost = require('./validation/classes/post')
 
+const refund = require('actions/refund')
+const upvote = require('actions/upvote')
+
 const username = 'bla'
 const postingKey = 'bla'
 
@@ -15,7 +18,7 @@ bot.onDeposit(
         const deposit = new depositHandler(data, res)
         const depositValidator = new validateDeposit(deposit, settings)
         const postValidator = new validatePost(deposit, settings)
-        const refund = new refund(deposit, settings)
+        const refund = new refund(deposit)
 
         depositValidator.checks.push(
             depositValidator.isCorrectAmount(),
