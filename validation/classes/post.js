@@ -1,6 +1,7 @@
 const main = require('../index')
 const LanguageDetect = require('languagedetect')
 const lngDetector = new LanguageDetect()
+const steem = require('../../components/steem')
 
 module.exports = class extends main {
     constructor (deposit, settings) {
