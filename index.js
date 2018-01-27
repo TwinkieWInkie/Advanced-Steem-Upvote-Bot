@@ -1,4 +1,6 @@
 const SteemBot = require('steem-bot').default
+const keystone = require('./components/keystone')
+
 
 const ValidateDeposit = require('./validation/classes/deposit')
 const ValidatePost = require('./validation/classes/post')
@@ -37,7 +39,7 @@ bot.onDeposit(
         )
 
         if (postValidator.check() === false)
-            return refund.doRefund
+            return refund.doRefund()
     }
 )
 

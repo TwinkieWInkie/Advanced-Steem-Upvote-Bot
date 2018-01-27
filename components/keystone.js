@@ -16,6 +16,8 @@ keystone.set('locals', {
     editable: keystone.content.editable,
 });
 
+keystone.import('../../models');
+
 keystone.start();
 
 module.exports = keystone
