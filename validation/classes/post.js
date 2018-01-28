@@ -4,20 +4,17 @@ const lngDetector = new LanguageDetect()
 const steem = require('../../components/steem')
 
 module.exports = class extends main {
-    constructor (deposit, settings) {
-        super(deposit, settings)
+    constructor (deposit, config, callback) {
+        super(deposit, config)
 
-        // I write my code like I live, no promises
-        this.getContent()
-        this.checkComments()
-    }
+		steem.api.getContent(this.post.author, this.post.permlink, (err, res) => {
 
-    getContent () {
-        steem.api.getContent(this.post.author, this.post.permlink, (err, res) => {
-            this.post.metadata = JSON.parse( res.json.metadata )
-            this.post.content = res.body
-            this.post.replies = res.replies
-        })
+			this.post.metadata = JSON.parse( res.json_metadata )
+			this.post.content = res.body
+			this.post.replies = res.replies.map( (i) => i.author )
+
+			callback()
+		})
     }
 
     checkImages () {
@@ -25,11 +22,11 @@ module.exports = class extends main {
     }
 
     checkComments () {
-        return this.post.replies.map( (i) => i.author ).includes('cheetah', 'steemcleaners')
+        return ! this.post.replies.includes('cheetah', 'steemcleaners')
     }
 
     checkLength () {
-        //TODO
+        return this.post.content.length > this.config.minCharacters
     }
 
     checkEnglish () {
