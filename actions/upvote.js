@@ -40,7 +40,10 @@ module.exports = class {
     	this.deposit.res.commentOnMemo( this.config.commentMessage + ' Requested by @'+this.deposit.data.from )
 	}
 
-	doUpvote () {
-    	this.deposit.res.upvoteOnMemo( this.config.votePercentage )
+	doUpvote (i) {
+    	var voteCount = i / 4
+		voteCount = ~~voteCount
+    	
+    	this.deposit.res.upvoteOnMemo( this.config.votePercentage + voteCount)
 	}
 }

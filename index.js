@@ -25,6 +25,8 @@ settings.getConfigs((config) => {
 	})
 	console.log('Starting listner for:' +config.username)
 	
+	var i = 0
+	
 	bot.onDeposit(
 		[config.username],
 		(data, res) => {
@@ -87,11 +89,12 @@ settings.getConfigs((config) => {
 						return refund.doRefund()
 
 					const upvote = new Upvote(deposit, keystone, settings)
-
+					
 					upvote.logLastUpvote()
 					upvote.logUpvote(config._id)
 					upvote.createComment()
-					upvote.doUpvote()
+					upvote.doUpvote(i)
+					i++
 				})
 			})
 		}
