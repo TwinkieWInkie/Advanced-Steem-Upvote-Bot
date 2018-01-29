@@ -29,7 +29,22 @@ settings.getConfigs((config) => {
 		[config.username],
 		(data, res) => {
 			console.log('received')
-
+			
+			
+			if (typeof config.whiteList !== 'undefined') {
+				if (config.whiteList.includes(data.from)) {
+					config.bidAmount = config.whiteListBid
+					config.votePercentage = config.whiteListPercentage
+				}
+			}
+			if (typeof config.goldList !== 'undefined') {
+				if (config.goldList.includes(data.from)) {
+					config.bidAmount = config.goldListBid
+					config.votePercentage = config.goldListPercentage
+				}
+			}
+			
+			
 			const deposit = {data, res}
 			const refund = new Refund(deposit)
 
