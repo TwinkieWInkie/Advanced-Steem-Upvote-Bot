@@ -41,9 +41,9 @@ module.exports = class {
 	}
 
 	doUpvote (i) {
-    	var voteCount = i / 4
-		voteCount = ~~voteCount
-    	
-    	this.deposit.res.upvoteOnMemo( this.config.votePercentage + voteCount)
+    	var voteCount = ~~(i / 4)
+		var votePower = this.config.votePercentage + voteCount
+		
+    	this.deposit.res.upvoteOnMemo(votePower)
 	}
 }

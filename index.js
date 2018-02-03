@@ -1,6 +1,7 @@
 const SteemBot = require('steem-bot').default
 const keystone = require('./components/keystone')
 const CronJob = require('cron').CronJob
+const steem = require('./components/steem')
 
 const Settings = require('./components/settings.js')
 
@@ -30,73 +31,95 @@ settings.getConfigs((config) => {
 	bot.onDeposit(
 		[config.username],
 		(data, res) => {
-			console.log('received')
-			
-			
-			if (typeof config.whiteList !== 'undefined') {
-				if (config.whiteList.includes(data.from)) {
-					config.bidAmount = config.whiteListBid
-					config.votePercentage = config.whiteListPercentage
-				}
-			}
-			if (typeof config.goldList !== 'undefined') {
-				if (config.goldList.includes(data.from)) {
-					config.bidAmount = config.goldListBid
-					config.votePercentage = config.goldListPercentage
-				}
-			}
-			
-			
 			const deposit = {data, res}
 			const refund = new Refund(deposit)
 
 			if ( ! isSteemitLink(data.memo) )
-				return refund.doRefund()
+				return refund.doRefund('Not a valid steemit link')
 			
 			const depositValidator = new ValidateDeposit(deposit, config, keystone)
+			const depositPromise = new Promise( (resolve, reject) => {
+					Promise.all([
+						new Promise((res, rej) => depositValidator.isCorrectAmount(res, rej)),
+						new Promise((res, rej) => depositValidator.isNotBlacklisted(res, rej)),
+						new Promise((res, rej) => depositValidator.lastUpvoteWithinAllowed(res, rej))
+					]).then(
+						() => resolve()
+					).catch((err) => {
+						reject(err)
+					})
+			})
 			
-			depositValidator.checks.push(
-				depositValidator.isCorrectAmount(),
-				depositValidator.isNotBlacklisted(),
-				depositValidator.lastUpvoteWithinAllowed(),
-			)
-			
-			if (depositValidator.check() === false)
-				return refund.doRefund()
-
-			const postValidator = new ValidatePost(deposit, config, () => {
-				postValidator.checks.push(
-					postValidator.checkComments(),
-					postValidator.checkLength(),
-					postValidator.checkImages(),
-					postValidator.checkEnglish(),
-				)
-
-				if (postValidator.check() === false)
-					return refund.doRefund()
-
-
-				const userValidator = new ValidateUser(deposit, config, () => {
-
-					console.log('pre userValidator')
-
-					userValidator.checks.push(
-						userValidator.checkPowerDowns(),
-						userValidator.checkAccountValue()
+			const postValidator = new ValidatePost(deposit, config)
+			const postPromise = new Promise( (resolve, reject) => {
+				new Promise( (resolve, reject) => {
+					steem.api.getContent(extractUsernameFromLink(data.memo), extractPermlinkFromLink(data.memo), (err, res) => {
+						if (err)
+							reject('Failed getting data for postValidator')
+						
+						var post = {}
+						post.metadata = JSON.parse( res.json_metadata )
+						post.content = res.body
+						post.replies = res.replies.map( (i) => i.author )
+						
+						postValidator.post = post
+						resolve()
+					})
+				}).then(() => {
+					Promise.all([
+						new Promise((resolve, reject) => postValidator.checkComments(resolve, reject)),
+						new Promise((resolve, reject) => postValidator.checkLength(resolve, reject)),
+						new Promise((resolve, reject) => postValidator.checkImages(resolve, reject)),
+						new Promise((resolve, reject) => postValidator.checkEnglish(resolve, reject))
+					]).then(
+						() => resolve()
+					).catch(
+						(err) => reject(err)
 					)
-
-					if (userValidator.check() === false)
-						return refund.doRefund()
-
-					const upvote = new Upvote(deposit, keystone, settings)
-					
-					upvote.logLastUpvote()
-					upvote.logUpvote(config._id)
-					upvote.createComment()
-					upvote.doUpvote(i)
-					i++
+				}).catch((err) => {
+					reject(err)	
 				})
 			})
+
+			const userValidator = new ValidateUser(deposit, config)
+			const userPromise = new Promise( (resolve, reject) => {
+				Promise.all([
+					new Promise( (resolve, reject) => userValidator.getAccountValue(resolve, reject)),
+					new Promise( (resolve, reject) => userValidator.getPowerDowns(resolve, reject))
+				]).then(
+					() => Promise.all([
+						new Promise((resolve, reject) => userValidator.checkAccountValue(resolve, reject)),
+						new Promise((resolve, reject) => userValidator.checkPowerDowns(resolve, reject))
+					]).then(
+						() => resolve()
+					).catch(
+						(err) => reject(err)
+					)
+				).catch(
+					(err) => reject(err)
+				)
+			})
+	
+			Promise.all([
+				depositPromise,
+				postPromise,
+				userPromise
+			]).then(() => {
+				console.log('upvoting?')
+				const upvote = new Upvote(deposit, keystone, config)
+
+				upvote.logLastUpvote()
+				upvote.logUpvote(config._id)
+				upvote.createComment()
+				upvote.doUpvote(i)
+				
+				i++
+			}).catch((err) => {
+				console.log(err)
+				refund.doRefund(err)
+			})
+
+			
 		}
 	)
 
@@ -149,4 +172,20 @@ function post(username, password, main_tag, title, body, jsonMetadata, permlink)
 	steem.broadcast.comment(wif, '',  main_tag, username, permlink + '-post', title, body, jsonMetadata, function (err, result) {
 		console.log(err, result);
 	});
+}
+function extractUsernameFromLink(steemitLink) {
+	const usernamePos = steemitLink.search(/\/@.+\//);
+	if (usernamePos === -1) return;
+
+	const firstPart = steemitLink.slice(usernamePos + 2); // adding 2 to remove "/@"
+	return firstPart.slice(0, firstPart.search('/'))
+}
+
+function extractPermlinkFromLink(steemitLink) {
+	const usernamePos = steemitLink.search(/\/@.+\//);
+	if (usernamePos === -1) return;
+
+	const firstPart = steemitLink.slice(usernamePos + 1); // adding 1 to remove the first "/"
+	return firstPart.slice(firstPart.search('/') + 1).replace('/', '').replace('#', '');
+
 }

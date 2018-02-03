@@ -30,16 +30,16 @@ module.exports = class extends main {
         })
     }
     
-    isNotBlacklisted () {
-    	return ! this.config.blacklist.includes( this.deposit.data.username )
+    isNotBlacklisted (resolve, reject) {
+    	return this.config.blacklist.includes( this.deposit.data.username ) ? reject('User Blacklisted') : resolve()
 	}
     
-    isCorrectAmount () {
-    	return parseNumber(this.deposit.data.amount) === this.config.bidAmount
+    isCorrectAmount (resolve, reject) {
+    	return parseNumber(this.deposit.data.amount) === this.config.bidAmount ? resolve() : reject('Wrong amount sent')
 	}
 
-    lastUpvoteWithinAllowed () {
-        return this.lastUpvote ? this.lastUpvote < ( formatSeconds(new Date()) - this.config.minSeconds ) : true
+    lastUpvoteWithinAllowed (resolve, reject){
+        return ! this.lastUpvote < ( formatSeconds(new Date()) - this.config.minSeconds ) ? resolve() : reject('Upvoting too much')
     }
 }
 

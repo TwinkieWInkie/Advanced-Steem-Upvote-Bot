@@ -4,33 +4,26 @@ const lngDetector = new LanguageDetect()
 const steem = require('../../components/steem')
 
 module.exports = class extends main {
-    constructor (deposit, config, callback) {
+    constructor (deposit, config, post) {
         super(deposit, config)
 
-		steem.api.getContent(this.post.author, this.post.permlink, (err, res) => {
-
-			this.post.metadata = JSON.parse( res.json_metadata )
-			this.post.content = res.body
-			this.post.replies = res.replies.map( (i) => i.author )
-
-			callback()
-		})
+		this.post = post
     }
 
-    checkImages () {
-        return typeof this.post.metadata.image !== 'undefined'
+    checkImages (resolve, reject) {
+        return typeof this.post.metadata.image !== 'undefined' ? resolve() : reject('Post misses image')
     }
 
-    checkComments () {
-        return ! this.post.replies.includes('cheetah', 'steemcleaners')
+    checkComments (resolve, reject) {
+        return ! this.post.replies.includes('cheetah', 'steemcleaners') ? resolve() : reject('Upvoted by other helpers already')
     }
 
-    checkLength () {
-        return this.post.content.length > this.config.minCharacters
+    checkLength (resolve, reject) {
+        return this.post.content.length > this.config.minCharacters ? resolve() : reject('Post not long enough')
     }
 
-    checkEnglish () {
-        return lngDetector.detect(this.post.content)[0][0] === 'english'
+    checkEnglish (resolve, reject) {
+        return lngDetector.detect(this.post.content)[0][0] === 'english' ? resolve() : reject('Post not in English')
     }
 
 }

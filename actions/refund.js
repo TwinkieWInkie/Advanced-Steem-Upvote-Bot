@@ -3,17 +3,17 @@ module.exports = class {
         this.deposit = deposit
     }
 
-    doRefund () {
+    doRefund (err) {
     	console.log('doingRefund')
         if (this.deposit.data.amount.indexOf('STEEM') > -1) {
             this.deposit.res.sendSteem(
                 this.deposit.data.amount,
-                'Refunding'
+                err
             );
         } else {
             this.deposit.res.sendSbd(
                 this.deposit.data.amount,
-                'Refunding'
+                err
             );
         }
     }
