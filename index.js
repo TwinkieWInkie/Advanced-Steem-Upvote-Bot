@@ -64,7 +64,7 @@ settings.getConfigs((config) => {
 						
 						var post = {}
 						post.metadata = JSON.parse( res.json_metadata )
-						post.content = res.body
+						post.content = res.body.replace(/\[(.*?)\]/g, '').replace(/<[^>]*>/g, '').replace(/\((.+?)\)/g, '')
 						post.replies = res.replies.map( (i) => i.author )
 						
 						postValidator.post = post
