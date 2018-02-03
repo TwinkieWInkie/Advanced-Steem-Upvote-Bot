@@ -31,14 +31,17 @@ settings.getConfigs((config) => {
 	bot.onDeposit(
 		[config.username],
 		(data, res) => {
+			console.log('got deposit')
 			const deposit = {data, res}
 			const refund = new Refund(deposit)
-
+			console.log('created refund')
 			if ( ! isSteemitLink(data.memo) )
 				return refund.doRefund('Not a valid steemit link')
-			
+			console.log('isSteemitLink')
 			const depositValidator = new ValidateDeposit(deposit, config, keystone)
+			console.log('depositValidator')
 			const depositPromise = new Promise( (resolve, reject) => {
+				console.log('running depositPromise')
 					Promise.all([
 						new Promise((res, rej) => depositValidator.isCorrectAmount(res, rej)),
 						new Promise((res, rej) => depositValidator.isNotBlacklisted(res, rej)),
@@ -49,9 +52,11 @@ settings.getConfigs((config) => {
 						reject(err)
 					})
 			})
-			
+			console.log('depositPromise')
 			const postValidator = new ValidatePost(deposit, config)
+			console.log('postValidator')
 			const postPromise = new Promise( (resolve, reject) => {
+				console.log('running postPromise')
 				new Promise( (resolve, reject) => {
 					steem.api.getContent(extractUsernameFromLink(data.memo), extractPermlinkFromLink(data.memo), (err, res) => {
 						if (err)
@@ -80,9 +85,11 @@ settings.getConfigs((config) => {
 					reject(err)	
 				})
 			})
-
+			console.log('postPromise')
 			const userValidator = new ValidateUser(deposit, config)
+			console.log('userValidator')
 			const userPromise = new Promise( (resolve, reject) => {
+				console.log('running userPromise')
 				Promise.all([
 					new Promise( (resolve, reject) => userValidator.getAccountValue(resolve, reject)),
 					new Promise( (resolve, reject) => userValidator.getPowerDowns(resolve, reject))
@@ -99,7 +106,7 @@ settings.getConfigs((config) => {
 					(err) => reject(err)
 				)
 			})
-	
+			console.log('userPromise')
 			Promise.all([
 				depositPromise,
 				postPromise,
@@ -115,10 +122,11 @@ settings.getConfigs((config) => {
 				
 				i++
 			}).catch((err) => {
+				console.log('refunding')
 				console.log(err)
 				refund.doRefund(err)
 			})
-
+			console.log('mainPromise')
 			
 		}
 	)
