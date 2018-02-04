@@ -2,6 +2,7 @@ const SteemBot = require('steem-bot').default
 const keystone = require('./components/keystone')
 const CronJob = require('cron').CronJob
 const steem = require('./components/steem')
+const List = require('./components/list')
 
 const Settings = require('./components/settings.js')
 
@@ -26,22 +27,47 @@ settings.getConfigs((config) => {
 	})
 	console.log('Starting listner for:' +config.username)
 	
-	var i = 0
-	
 	bot.onDeposit(
 		[config.username],
 		(data, res) => {
 			console.log('got deposit')
+			
 			const deposit = {data, res}
 			const refund = new Refund(deposit)
-			console.log('created refund')
-			if ( ! isSteemitLink(data.memo) )
-				return refund.doRefund('Not a valid steemit link')
-			console.log('isSteemitLink')
-			const depositValidator = new ValidateDeposit(deposit, config, keystone)
-			console.log('depositValidator')
-			const depositPromise = new Promise( (resolve, reject) => {
-				console.log('running depositPromise')
+			
+			const list = new List(keystone)
+			new Promise((resolve, reject) => {
+				list.checkUsername(deposit.data.from, resolve, reject)
+			}).then((val) => {
+				console.log('whitelisted')
+				console.log(val)
+				console.log(Number(deposit.data.amount.split(' ')[0]))
+				if (val.bidAmount === Number(deposit.data.amount.split(' ')[0])) {
+					console.log('right amount')
+					const upvote = new Upvote(deposit, keystone, config)
+
+					upvote.logLastUpvote()
+					upvote.logUpvote(config._id)
+					upvote.createComment()
+					upvote.doUpvote(val.voteValue)
+				} else {
+					refund.doRefund('Wrong amount sent')
+				}
+			}).catch( () => {
+
+
+				console.log('created refund')
+
+				if (!isSteemitLink(data.memo))
+					return refund.doRefund('Not a valid steemit link')
+				console.log('isSteemitLink')
+
+				const depositValidator = new ValidateDeposit(deposit, config, keystone)
+				console.log('depositValidator')
+
+				const depositPromise = new Promise((resolve, reject) => {
+					console.log('running depositPromise')
+
 					Promise.all([
 						new Promise((res, rej) => depositValidator.isCorrectAmount(res, rej)),
 						new Promise((res, rej) => depositValidator.isNotBlacklisted(res, rej)),
@@ -51,82 +77,89 @@ settings.getConfigs((config) => {
 					).catch((err) => {
 						reject(err)
 					})
-			})
-			console.log('depositPromise')
-			const postValidator = new ValidatePost(deposit, config)
-			console.log('postValidator')
-			const postPromise = new Promise( (resolve, reject) => {
-				console.log('running postPromise')
-				new Promise( (resolve, reject) => {
-					steem.api.getContent(extractUsernameFromLink(data.memo), extractPermlinkFromLink(data.memo), (err, res) => {
-						if (err)
-							reject('Failed getting data for postValidator')
-						
-						var post = {}
-						post.metadata = JSON.parse( res.json_metadata )
-						post.content = res.body.replace(/\[(.*?)\]/g, '').replace(/<[^>]*>/g, '').replace(/\((.+?)\)/g, '')
-						post.replies = res.replies.map( (i) => i.author )
-						
-						postValidator.post = post
-						resolve()
-					})
-				}).then(() => {
-					Promise.all([
-						new Promise((resolve, reject) => postValidator.checkComments(resolve, reject)),
-						new Promise((resolve, reject) => postValidator.checkLength(resolve, reject)),
-						new Promise((resolve, reject) => postValidator.checkImages(resolve, reject)),
-						new Promise((resolve, reject) => postValidator.checkEnglish(resolve, reject))
-					]).then(
-						() => resolve()
-					).catch(
-						(err) => reject(err)
-					)
-				}).catch((err) => {
-					reject(err)	
 				})
-			})
-			console.log('postPromise')
-			const userValidator = new ValidateUser(deposit, config)
-			console.log('userValidator')
-			const userPromise = new Promise( (resolve, reject) => {
-				console.log('running userPromise')
-				Promise.all([
-					new Promise( (resolve, reject) => userValidator.getAccountValue(resolve, reject)),
-					new Promise( (resolve, reject) => userValidator.getPowerDowns(resolve, reject))
-				]).then(
-					() => Promise.all([
-						new Promise((resolve, reject) => userValidator.checkAccountValue(resolve, reject)),
-						new Promise((resolve, reject) => userValidator.checkPowerDowns(resolve, reject))
+				console.log('depositPromise')
+
+				const postValidator = new ValidatePost(deposit, config)
+				console.log('postValidator')
+
+				const postPromise = new Promise((resolve, reject) => {
+					console.log('running postPromise')
+
+					new Promise((resolve, reject) => {
+						steem.api.getContent(extractUsernameFromLink(data.memo), extractPermlinkFromLink(data.memo), (err, res) => {
+							if (err)
+								reject('Failed getting data for postValidator')
+
+							var post = {}
+							post.metadata = JSON.parse(res.json_metadata)
+							post.content = res.body.replace(/\[(.*?)\]/g, '').replace(/<[^>]*>/g, '').replace(/\((.+?)\)/g, '')
+							post.replies = res.replies.map((i) => i.author)
+
+							postValidator.post = post
+							resolve()
+						})
+					}).then(() => {
+						Promise.all([
+							new Promise((resolve, reject) => postValidator.checkComments(resolve, reject)),
+							new Promise((resolve, reject) => postValidator.checkLength(resolve, reject)),
+							new Promise((resolve, reject) => postValidator.checkImages(resolve, reject)),
+							new Promise((resolve, reject) => postValidator.checkEnglish(resolve, reject))
+						]).then(
+							() => resolve()
+						).catch(
+							(err) => reject(err)
+						)
+					}).catch((err) => {
+						reject(err)
+					})
+				})
+				console.log('postPromise')
+
+				const userValidator = new ValidateUser(deposit, config)
+				console.log('userValidator')
+
+				const userPromise = new Promise((resolve, reject) => {
+					console.log('running userPromise')
+
+					Promise.all([
+						new Promise((resolve, reject) => userValidator.getAccountValue(resolve, reject)),
+						new Promise((resolve, reject) => userValidator.getPowerDowns(resolve, reject))
 					]).then(
-						() => resolve()
+						() => Promise.all([
+							new Promise((resolve, reject) => userValidator.checkAccountValue(resolve, reject)),
+							new Promise((resolve, reject) => userValidator.checkPowerDowns(resolve, reject))
+						]).then(
+							() => resolve()
+						).catch(
+							(err) => reject(err)
+						)
 					).catch(
 						(err) => reject(err)
 					)
-				).catch(
-					(err) => reject(err)
-				)
-			})
-			console.log('userPromise')
-			Promise.all([
-				depositPromise,
-				postPromise,
-				userPromise
-			]).then(() => {
-				console.log('upvoting?')
-				const upvote = new Upvote(deposit, keystone, config)
+				})
+				console.log('userPromise')
 
-				upvote.logLastUpvote()
-				upvote.logUpvote(config._id)
-				upvote.createComment()
-				upvote.doUpvote(i)
-				
-				i++
-			}).catch((err) => {
-				console.log('refunding')
-				console.log(err)
-				refund.doRefund(err)
+				Promise.all([
+					depositPromise,
+					postPromise,
+					userPromise
+				]).then(() => {
+					console.log('upvoting?')
+
+					const upvote = new Upvote(deposit, keystone, config)
+
+					upvote.logLastUpvote()
+					upvote.logUpvote(config._id)
+					upvote.createComment()
+					upvote.doUpvote(config.voteValue)
+				}).catch((err) => {
+					console.log('refunding')
+					console.log(err)
+					refund.doRefund(err)
+				})
+				console.log('mainPromise')
 			})
-			console.log('mainPromise')
 			
 		}
 	)
@@ -134,7 +167,7 @@ settings.getConfigs((config) => {
 	bot.start()
 	
 	new CronJob('0 */12 * * *', function () {
-		keystone.list('BotPosts').find({
+		keystone.list('BotPosts').model.find({
 			reported: false,
 			upvotedBy: config._id
 		}).lean().exec( (err, docs) => {
