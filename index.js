@@ -19,22 +19,22 @@ settings.getConfigs((config) => {
 	const username = config.username
 	const postingKey = config.postingKey
 	const activeKey = config.activeKey
-	
+
 	const bot = new SteemBot({
 		username,
 		postingKey,
 		activeKey
 	})
-	console.log('Starting listner for:' +config.username)
-	
+	console.log('Starting listner for:' + config.username)
+
 	bot.onDeposit(
 		[config.username],
 		(data, res) => {
 			console.log('got deposit')
-			
+
 			const deposit = {data, res}
 			const refund = new Refund(deposit)
-			
+
 			const list = new List(keystone)
 			new Promise((resolve, reject) => {
 				list.checkUsername(deposit.data.from, resolve, reject)
@@ -53,7 +53,7 @@ settings.getConfigs((config) => {
 				} else {
 					refund.doRefund('Wrong amount sent')
 				}
-			}).catch( () => {
+			}).catch(() => {
 
 
 				console.log('created refund')
@@ -159,10 +159,10 @@ settings.getConfigs((config) => {
 					refund.doRefund(err)
 				})
 				console.log('mainPromise')
+
 			})
-			
-		}
-	)
+		})
+	
 
 	bot.start()
 	

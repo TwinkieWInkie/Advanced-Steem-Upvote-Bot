@@ -16,7 +16,7 @@ module.exports = class {
 }
 
 function extractUsernameFromLink(steemitLink) {
-        const usernamePos = steemitLink.search(/\/@.+\//);
+        const usernamePos = steemiintLink.search(/\/@.+\//);
         if (usernamePos === -1) return;
 
         const firstPart = steemitLink.slice(usernamePos + 2); // adding 2 to remove "/@"
