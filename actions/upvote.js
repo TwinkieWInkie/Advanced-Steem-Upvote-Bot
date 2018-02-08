@@ -40,12 +40,10 @@ module.exports = class {
     	this.deposit.res.commentOnMemo( this.config.commentMessage + ' Requested by @'+this.deposit.data.from )
 	}
 
-	doUpvote (voteValue) {
+	doUpvote (i) {
 		var votePower = ~~ Number(voteValue) / Number(everything(this.deposit.data.to)) * 100
 		
-		new Promise((resolve) => {
-			everything(this.deposit.data.to, resolve)
-		}).then((votePart) => {
+		everthing(this.config.username).then((votePart) => {
 			let votePower = ~~ Number(this.config.voteValue) / Number(votePart) * 100
 			if (votePower > 100) votePower = 100
 
@@ -61,15 +59,13 @@ const dsteem = require('dsteem')
 const moment = require('moment')
 const client = new dsteem.Client('https://api.steemit.com');
 
-async function everything(name, resolve) {
+async function everything(name) {
 	let account = await client.database.getAccounts([name]) // get account
 	account = account[0]
 	let dynamic = await global_properties() // these are global properties needed to calculate the steem price etc.
 	let votingPower = await voting_power(account) // this is the calculation of the votingpower which is completely accurate
 	let weight = 10000 // Calculate weight here - if your vote is worth 3$ and user wants 5$ then 100% (10000) - if the user wants 1$ then 1/3 => 0.33% (3333)
-	let voteValue = await vote_value(name, account, votingPower, weight, 'SBD', dynamic.reward_fund, dynamic.reward_fund_claims, dynamic.sbd_price, dynamic.total_vesting_fund_steem)
-	
-	resolve(await voteValue)
+	return await vote_value(name, account, votingPower, weight, 'SBD', dynamic.reward_fund, dynamic.reward_fund_claims, dynamic.sbd_price, dynamic.total_vesting_fund_steem)
 }
 
 async function voting_power(account) {

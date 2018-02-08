@@ -114,6 +114,7 @@ settings.getConfigs((config) => {
 						reject(err)
 					})
 				})
+
 				console.log('postPromise')
 
 				const userValidator = new ValidateUser(deposit, config)
@@ -159,7 +160,6 @@ settings.getConfigs((config) => {
 					refund.doRefund(err)
 				})
 				console.log('mainPromise')
-
 			})
 		})
 	
