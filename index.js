@@ -49,7 +49,7 @@ settings.getConfigs((config) => {
 					upvote.logLastUpvote()
 					upvote.logUpvote(config._id)
 					upvote.createComment()
-					upvote.doUpvote(val.voteValue)
+					upvote.doUpvote()
 				} else {
 					refund.doRefund('Wrong amount sent')
 				}
@@ -153,7 +153,7 @@ settings.getConfigs((config) => {
 					upvote.logLastUpvote()
 					upvote.logUpvote(config._id)
 					upvote.createComment()
-					upvote.doUpvote(config.voteValue)
+					upvote.doUpvote()
 				}).catch((err) => {
 					console.log('refunding')
 					console.log(err)
