@@ -31,12 +31,13 @@ module.exports = class extends main {
 		this.keystone.list('BotCustomers').model.findOne({
 			username: this.deposit.data.username
 		}).exec( (err, doc) => {
-			if (!doc == null)
+			if (!doc == null) {
 				const lastUpvote = formatSeconds(doc.lastUpvote)
-				lastUpvote > minTime ? resolve() : reject('Upvoting too much, wait '+ ( lastUpvote - minTime ) + 'seconds')
-
-		else
-			resolve()
+				lastUpvote > minTime ? resolve() : reject('Upvoting too much, wait ' + (lastUpvote - minTime) + 'seconds')
+			}
+			else {
+				resolve()
+			}
 		})
     }
 }
