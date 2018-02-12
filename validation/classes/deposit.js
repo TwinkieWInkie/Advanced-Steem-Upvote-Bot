@@ -8,19 +8,8 @@ module.exports = class extends main {
 		this.keystone = keystone
 		
         this.getContent()
-		this.getLastUpvote()
     }
-	
-    getLastUpvote () {
-    	this.keystone.list('BotCustomers').model.findOne({
-			username: this.deposit.data.username
-		}).exec( (err, doc) => {
-			if (!doc == null)
-				this.lastUpvote = formatSeconds(doc.lastUpvote)
-			else 
-				this.lastUpvote = false
-		})
-	}
+    
 	
     getContent() {
         steem.api.getContent(this.post.author, this.post.permlink, (err, res) => {
@@ -39,11 +28,16 @@ module.exports = class extends main {
 	}
 
     lastUpvoteWithinAllowed (resolve, reject){
-        const minTime = formatSeconds(new Date()) - this.config.minSeconds
-        console.log(typeof this.config.minSeconds)
-        console.log(typeof this.lastUpvote)
-        console.log(typeof minTime)
-        return this.lastUpvote > minTime ? resolve() : reject('Upvoting too much, wait '+ ( this.lastUpvote - minTime ) + 'seconds')
+		this.keystone.list('BotCustomers').model.findOne({
+			username: this.deposit.data.username
+		}).exec( (err, doc) => {
+			if (!doc == null)
+				const lastUpvote = formatSeconds(doc.lastUpvote)
+				lastUpvote > minTime ? resolve() : reject('Upvoting too much, wait '+ ( lastUpvote - minTime ) + 'seconds')
+
+		else
+			resolve()
+		})
     }
 }
 
