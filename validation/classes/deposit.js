@@ -39,7 +39,11 @@ module.exports = class extends main {
 	}
 
     lastUpvoteWithinAllowed (resolve, reject){
-        return ! this.lastUpvote < ( formatSeconds(new Date()) - this.config.minSeconds ) ? resolve() : reject('Upvoting too much')
+        const minTime = formatSeconds(new Date()) - this.config.minSeconds
+        console.log(typeof this.config.minSeconds)
+        console.log(typeof this.lastUpvote)
+        console.log(typeof minTime)
+        return this.lastUpvote > minTime ? resolve() : reject('Upvoting too much, wait '+ ( this.lastUpvote - minTime ) + 'seconds')
     }
 }
 

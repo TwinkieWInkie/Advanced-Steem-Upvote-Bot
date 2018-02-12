@@ -40,12 +40,16 @@ module.exports = class {
     	this.deposit.res.commentOnMemo( this.config.commentMessage + ' Requested by @'+this.deposit.data.from )
 	}
 
-	doUpvote () {
-		everthing(this.config.username).then((votePart) => {
-			let votePower = ~~ Number(this.config.voteValue) / Number(votePart) * 100
+	doUpvote (voteValue = this.config.voteValue) {
+		everything(this.config.username).then((totalPower) => {
+            console.log('votePart')
+            console.log(totalPower)
+            console.log(voteValue)
+			let votePower = (Number(voteValue) / Number(totalPower)) * 100
+            console.log(votePower)
 			if (votePower > 100) votePower = 100
 
-			this.deposit.res.upvoteOnMemo(votePower)
+			this.deposit.res.upvoteOnMemo( ~~ votePower + 1)
 
 		})
 	}

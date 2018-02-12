@@ -49,14 +49,13 @@ settings.getConfigs((config) => {
 					upvote.logLastUpvote()
 					upvote.logUpvote(config._id)
 					upvote.createComment()
-					upvote.doUpvote()
+					upvote.doUpvote(val.voteValue)
 				} else {
 					refund.doRefund('Wrong amount sent')
 				}
-			}).catch(() => {
-
-
-				console.log('created refund')
+			}).catch((err) => {
+                console.log('catch')
+                console.log(err)
 
 				if (!isSteemitLink(data.memo))
 					return refund.doRefund('Not a valid steemit link')
