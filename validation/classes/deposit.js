@@ -29,9 +29,10 @@ module.exports = class extends main {
 
     lastUpvoteWithinAllowed (resolve, reject){
 		this.keystone.list('BotCustomers').model.findOne({
-			username: this.deposit.data.username
+			username: this.deposit.data.from
 		}).exec( (err, doc) => {
 			if (!doc == null) {
+				const minTime = formatSeconds(new Date()) - this.config.minSeconds
 				const lastUpvote = formatSeconds(doc.lastUpvote)
 				lastUpvote > minTime ? resolve() : reject('Upvoting too much, wait ' + (lastUpvote - minTime) + 'seconds')
 			}
