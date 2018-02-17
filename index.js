@@ -182,7 +182,7 @@ settings.getConfigs((config) => {
 				config.reportMainTag,
 				config.reportTitle + ' ' + new Date().toLocaleDateString('en-US'),
 				config.reportMessage + '\n' +
-				+ map(docs => docs.url).join('\n'),
+				+ docs.map(i => i.url).join('\n'),
 				{ tags: config.reportTags }
 			)
 			
