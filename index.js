@@ -59,6 +59,7 @@ settings.getConfigs((config) => {
 
 				if (!isSteemitLink(data.memo))
 					return refund.doRefund('Not a valid steemit link')
+				
 				console.log('isSteemitLink')
 
 				const depositValidator = new ValidateDeposit(deposit, config, keystone)
@@ -174,14 +175,14 @@ settings.getConfigs((config) => {
 				i.reported = true
 				i.save()
 			})
-			
+
 			post(
 				config.username,
 				config.postingKey,
 				config.reportMainTag,
 				config.reportTitle + ' ' + new Date().toLocaleDateString('en-US'),
 				config.reportMessage + '\n' +
-				+ map(i => i.url).join('\n'),
+				+ map(docs => docs.url).join('\n'),
 				{ tags: config.reportTags }
 			)
 			
