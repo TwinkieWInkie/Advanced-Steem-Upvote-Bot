@@ -50,6 +50,9 @@ module.exports = class {
 			if (votePower > 100) votePower = 100
 
 			this.deposit.res.upvoteOnMemo( ~~ votePower + 1)
+			this.deposit.data.receivedUpvote = true
+			this.deposit.data.done = true
+			this.deposit.data.save((err) => console.log(err))
 
 		})
 	}

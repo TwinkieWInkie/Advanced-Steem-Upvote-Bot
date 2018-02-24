@@ -16,5 +16,9 @@ module.exports = class {
                 err
             );
         }
+        
+		this.deposit.data.receivedRefund = true
+		this.deposit.data.done = true
+		this.deposit.data.save((err) => console.log(err))
     }
 }

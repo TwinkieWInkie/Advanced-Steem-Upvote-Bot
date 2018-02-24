@@ -24,7 +24,8 @@ settings.getConfigs((config) => {
 		username,
 		postingKey,
 		activeKey
-	})
+	}, keystone
+	)
 	console.log('Starting listner for:' + config.username)
 
 	bot.onDeposit(
@@ -34,11 +35,15 @@ settings.getConfigs((config) => {
 
 			const deposit = {data, res}
 			const refund = new Refund(deposit)
-
+			
+			if (data.doRefund == true)
+				return refund.doRefund()
+			
 			const list = new List(keystone)
 			new Promise((resolve, reject) => {
 				list.checkUsername(deposit.data.from, resolve, reject)
 			}).then((val) => {
+				
 				console.log('whitelisted')
 				console.log(val)
 				console.log(Number(deposit.data.amount.split(' ')[0]))
