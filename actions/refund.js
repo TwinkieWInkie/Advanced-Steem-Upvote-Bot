@@ -3,7 +3,7 @@ module.exports = class {
         this.deposit = deposit
     }
 
-    doRefund (err) {
+    doRefund (err = 'Unexpected error') {
     	console.log('doingRefund')
         if (this.deposit.data.amount.indexOf('STEEM') > -1) {
             this.deposit.res.sendSteem(

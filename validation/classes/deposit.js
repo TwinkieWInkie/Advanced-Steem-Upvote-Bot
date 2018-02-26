@@ -31,7 +31,9 @@ module.exports = class extends main {
 		this.keystone.list('BotCustomers').model.findOne({
 			username: this.deposit.data.from
 		}).exec( (err, doc) => {
-			if (!doc == null) {
+			console.log(err)
+			console.log(doc)
+			if (doc == null) {
 				const minTime = formatSeconds(new Date()) - this.config.minSeconds
 				const lastUpvote = formatSeconds(doc.lastUpvote)
 				lastUpvote > minTime ? resolve() : reject('Upvoting too much, wait ' + (lastUpvote - minTime) + 'seconds')
@@ -44,7 +46,7 @@ module.exports = class extends main {
 }
 
 function formatSeconds (date) {
-	return ~~date.getTime() / 1000
+	return date.getTime() / 1000
 }
 
 function parseNumber (i) {
