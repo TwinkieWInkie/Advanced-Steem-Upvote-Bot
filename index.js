@@ -31,7 +31,9 @@ settings.getConfigs((config) => {
 		[config.username],
 		(data, res) => {
 			console.log('got deposit')
-
+            if (data.from === 'smartsteem') {
+                return
+            }
 			const deposit = {data, res}
 			const refund = new Refund(deposit)
 
