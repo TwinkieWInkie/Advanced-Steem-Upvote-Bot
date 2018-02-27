@@ -1,8 +1,9 @@
 module.exports = class {
-    constructor (deposit, keystone, config) {
+    constructor (deposit, keystone, config, refund) {
         this.deposit = deposit
 		this.keystone = keystone
 		this.config = config
+		this.refund = refund
     }
 	
 	logLastUpvote () {
@@ -47,13 +48,14 @@ module.exports = class {
             console.log(voteValue)
 			let votePower = (Number(voteValue) / Number(totalPower)) * 100
             console.log(votePower)
-			if (votePower > 100) votePower = 100
-
-			this.deposit.res.upvoteOnMemo( ~~ votePower + 1)
-			this.deposit.data.receivedUpvote = true
-			this.deposit.data.done = true
-			this.deposit.data.save((err) => console.log(err))
-
+			if (votePower > 100) {
+            	this.refund.doRefund()
+			} else {
+				this.deposit.res.upvoteOnMemo(~~votePower + 1)
+				this.deposit.data.receivedUpvote = true
+				this.deposit.data.done = true
+				this.deposit.data.save((err) => console.log(err))
+			}
 		})
 	}
 }

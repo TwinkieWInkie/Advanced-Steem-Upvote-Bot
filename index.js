@@ -15,6 +15,8 @@ const Upvote = require('./actions/upvote')
 
 const settings = new Settings(keystone)
 
+global.startTime = new Date().getTime()
+
 settings.getConfigs((config) => {
 	const username = config.username
 	const postingKey = config.postingKey
@@ -153,7 +155,7 @@ settings.getConfigs((config) => {
 				]).then(() => {
 					console.log('upvoting?')
 
-					const upvote = new Upvote(deposit, keystone, config)
+					const upvote = new Upvote(deposit, keystone, config, refund)
 
 					upvote.logLastUpvote()
 					upvote.logUpvote(config._id)
