@@ -28,17 +28,19 @@ module.exports = class extends main {
 	}
 
     lastUpvoteWithinAllowed (resolve, reject){
+        console.log(this.deposit.data.from)
 		this.keystone.list('BotCustomers').model.findOne({
 			username: this.deposit.data.from
 		}).exec( (err, doc) => {
-			console.log(err)
-			console.log(doc)
-			if (doc == null) {
+            console.log(err, doc)
+			if (doc) {
 				const minTime = formatSeconds(new Date()) - this.config.minSeconds
+                console.log(minTime)
 				const lastUpvote = formatSeconds(doc.lastUpvote)
-				lastUpvote > minTime ? resolve() : reject('Upvoting too much, wait ' + (lastUpvote - minTime) + 'seconds')
-			}
-			else {
+                console.log(lastUpvote)
+				lastUpvote < minTime ? resolve() : reject('Upvoting too much, wait: ' + secondsToHms(lastUpvote - minTime) )
+			} else {
+                console.log('not found')
 				resolve()
 			}
 		})
@@ -52,3 +54,15 @@ function formatSeconds (date) {
 function parseNumber (i) {
 	return Number( i.split(' ')[0] )
 }
+function secondsToHms(d) {
+        d = Number(d);
+        var h = Math.floor(d / 3600);
+        var m = Math.floor(d % 3600 / 60);
+        var s = Math.floor(d % 3600 % 60);
+
+        var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+        var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+        var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+        return hDisplay + mDisplay + sDisplay; 
+}
+
