@@ -3,7 +3,7 @@ require('dotenv').config()
 const keystone = require('keystone')
 
 keystone.init({
-    'port': 3001,
+    'port': 3003,
     'name': 'SteemPonzi',
     'brand': 'SteemPonzi',
     'headless': true

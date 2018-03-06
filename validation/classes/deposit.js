@@ -24,7 +24,7 @@ module.exports = class extends main {
 	}
     
     isCorrectAmount (resolve, reject) {
-    	return parseNumber(this.deposit.data.amount) === this.config.bidAmount ? resolve() : reject('Wrong amount sent')
+    	return parseNumber(this.deposit.data.amount) === this.config.bidAmount ? resolve() : reject('Wrong amount sent, current price: '+this.config.bidAmount+ ' for  '+this.config.voteValue + ' vote')
 	}
 
     lastUpvoteWithinAllowed (resolve, reject){

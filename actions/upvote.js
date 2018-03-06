@@ -49,12 +49,16 @@ module.exports = class {
 			let votePower = (Number(voteValue) / Number(totalPower)) * 100
             console.log(votePower)
 			if (votePower > 100) {
-            	this.refund.doRefund()
+            	this.refund.doRefund('Not enough voting power')
+                this.deposit.data.receivedRefund = true
+                this.deposit.data.done = true
+				this.deposit.data.save((err) => console.log(err))
 			} else {
 				this.deposit.res.upvoteOnMemo(~~votePower + 1)
 				this.deposit.data.receivedUpvote = true
 				this.deposit.data.done = true
 				this.deposit.data.save((err) => console.log(err))
+                this.createComment()
 			}
 		})
 	}

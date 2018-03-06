@@ -57,7 +57,6 @@ settings.getConfigs((config) => {
 
 					upvote.logLastUpvote()
 					upvote.logUpvote(config._id)
-					upvote.createComment()
 					upvote.doUpvote(val.voteValue)
 				} else {
 					refund.doRefund('Wrong amount sent')
@@ -161,7 +160,6 @@ settings.getConfigs((config) => {
 
 					upvote.logLastUpvote()
 					upvote.logUpvote(config._id)
-					upvote.createComment()
 					upvote.doUpvote()
 				}).catch((err) => {
 					console.log('refunding')
@@ -175,28 +173,30 @@ settings.getConfigs((config) => {
 
 	bot.start()
 	
-	new CronJob('0 */12 * * *', function () {
+	new CronJob('0 0 */12 * * *', function () {
 		keystone.list('BotPosts').model.find({
 			reported: false,
-			upvotedBy: config._id
-		}).lean().exec( (err, docs) => {
-			docs.forEach( (i) => {
-				i.reported = true
-				i.save()
-			})
-
-			post(
+            receivedUpvote: true
+		}).exec( (err, docs) => {
+            post(
 				config.username,
 				config.postingKey,
 				config.reportMainTag,
 				config.reportTitle + ' ' + new Date().toLocaleDateString('en-US'),
-				config.reportMessage + '\n' +
-				+ docs.map(i => i.url).join('\n'),
+				config.reportMessage + '\n\n'
+				+ docs.map(i => i.memo).join('\n'),
 				{ tags: config.reportTags }
-			)
-			
+            ) 
+            keystone.list('BotPosts').model.update({
+                reported: false,
+                receivedUpvote: true
+            }, {
+                $set: { reported: true }
+            }, {
+                multi: true
+            })
 		})
-	}, true)
+	}, null, true, 'America/Los_Angeles')
 })
 
 function isSteemitLink (memo) {
@@ -213,8 +213,7 @@ function isSteemitLink (memo) {
  * @param {object} [jsonMetadata] - dictionnary with additional tags, app name, etc,
  * @param {String} [permlink] - permanent link, by default it's the date + -post. eg : 20171237t122520625z-post
  */
-function post(username, password, main_tag, title, body, jsonMetadata, permlink) {
-	var wif = steem.auth.toWif(username, password, 'posting');
+function post(username, wif, main_tag, title, body, jsonMetadata, permlink) {
 	// By default permlink will be the date
 	permlink = permlink || new Date().toISOString().replace(/[^a-zA-Z0-9]+/g, '').toLowerCase();
 	jsonMetadata = jsonMetadata || {};
